@@ -11,7 +11,7 @@ const scoreValue = document.getElementById('scoreValue');
 const scoreProgress = document.getElementById('scoreProgress');
 
 // Typing animation for main heading
-const headingText = "Professional Website Security Scanner";
+const headingText = "Protect Your Digital Space With Security Scanner";
 let headingIndex = 0;
 
 function typeHeading() {
