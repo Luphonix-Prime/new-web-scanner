@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aphelioncyber - Website Security Scanner</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <!-- <header class="header"> -->
+            <!-- <div class="logo">
+                <i class="fas fa-shield-alt"></i>
+                <span>aphelioncyber</span>
+            </div> -->
+            <nav class="nav">
+                <!-- <a href="#scanner">Scanner</a> -->
+            </nav>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Hero Section -->
+            <section class="hero">
+                <div class="hero-content">
+                    <h1 class="typing-text" id="mainHeading"></h1>
+                    <p class="hero-subtitle">Comprehensive security analysis for your web applications. Identify vulnerabilities before they become threats.</p>
+                </div>
+                <div class="hero-visual">
+                    <div class="shield-container">
+                        <img src="HQ-removebg-preview.png" class="shield-icon" alt="Aphelion Cyber Logo">
+                        <div class="shield-rings">
+                            <div class="ring ring-1"></div>
+                            <div class="ring ring-2"></div>
+                            <div class="ring ring-3"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Scanner Section -->
+            <section class="scanner-section" id="scanner">
+                <div class="glass-card scanner-card">
+                    <div class="card-header">
+                        <h2>Website Security Scanner</h2>
+                        <p>Enter your website details to begin comprehensive security analysis</p>
+                    </div>
+                    
+                    <form id="scannerForm" class="scanner-form">
+                        <div class="form-group">
+                            <label for="websiteUrl">
+                                <i class="fas fa-globe"></i>
+                                Website URL
+                            </label>
+                            <input 
+                                type="url" 
+                                id="websiteUrl" 
+                                name="websiteUrl" 
+                                placeholder="https://example.com"
+                                required
+                            >
+                            <div class="error-message" id="urlError"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">
+                                <i class="fas fa-envelope"></i>
+                                Email Address
+                            </label>
+                            <input 
+                                type="email" 
+                                id="email" 
+                                name="email" 
+                                placeholder="your@email.com"
+                                required
+                            >
+                            <div class="error-message" id="emailError"></div>
+                        </div>
+
+                        <button type="submit" class="scan-button" id="scanButton">
+                            <span class="button-text">Start Security Scan</span>
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Progress Section -->
+                <div class="glass-card progress-card hidden" id="progressCard">
+                    <div class="progress-header">
+                        <h3>Scanning in Progress</h3>
+                        <p>Analyzing your website's security posture...</p>
+                    </div>
+                    
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="progress-percentage" id="progressPercentage">0%</div>
+                    </div>
+                    
+                    <div class="scan-status">
+                        <div class="status-item active" id="currentStatus">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <span id="statusText">Initializing scan...</span>
+                        </div>
+                    </div>
+                    
+                    <div class="scan-steps">
+                        <div class="step" id="step1">
+                            <i class="fas fa-circle-notch"></i>
+                            <span>Port scanning</span>
+                        </div>
+                        <div class="step" id="step2">
+                            <i class="fas fa-circle-notch"></i>
+                            <span>SSL/TLS analysis</span>
+                        </div>
+                        <div class="step" id="step3">
+                            <i class="fas fa-circle-notch"></i>
+                            <span>Vulnerability assessment</span>
+                        </div>
+                        <div class="step" id="step4">
+                            <i class="fas fa-circle-notch"></i>
+                            <span>Security headers check</span>
+                        </div>
+                        <div class="step" id="step5">
+                            <i class="fas fa-circle-notch"></i>
+                            <span>Malware detection</span>
+                        </div>
+                        <div class="step" id="step6">
+                            <i class="fas fa-circle-notch"></i>
+                            <span>Generating report</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Section -->
+                <div class="glass-card results-card hidden" id="resultsCard">
+                    <div class="results-header">
+                        <h3>Security Analysis Complete</h3>
+                        <p>Your comprehensive security report is ready</p>
+                    </div>
+                    
+                     <div class="results-content">
+                        <div class="score-section">
+                            <div class="score-circle" id="scoreCircle">
+                                <div class="score-inner">
+                                    <span class="score-value" id="scoreValue">85</span>
+                                    <span class="score-label">Security Score</span>
+                                </div>
+                                <svg class="score-ring" viewBox="0 0 120 120">
+                                    <circle cx="60" cy="60" r="50" class="score-background"></circle>
+                                    <circle cx="60" cy="60" r="50" class="score-progress" id="scoreProgress"></circle>
+                                </svg>
+                            </div>
+                        </div> 
+                        
+                         <div class="results-summary">
+                             <div class="summary-item">
+                                <div class="summary-icon success">
+                                    <i class="fas fa-check"></i>
+                                </div> 
+                                 <div class="summary-content">
+                                    <h4>Full Report Will Send at your mail shortly</h4>
+                                </div>
+                            </div>
+                            
+                            <!-- <div class="summary-item">
+                                <div class="summary-icon warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="summary-content">
+                                    <h4>Security Headers</h4>
+                                    <p>Some headers missing</p>
+                                </div>
+                            </div>
+                            
+                            <div class="summary-item">
+                                <div class="summary-icon success">
+                                    <i class="fas fa-shield-alt"></i>
+                                </div>
+                                <div class="summary-content">
+                                    <h4>Malware Check</h4>
+                                    <p>No threats detected</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div> -->   
+                    
+                    <div class="results-actions"> 
+                        <!-- <button class="action-button primary" onclick="downloadReport()">
+                            <i class="fas fa-download"></i>
+                            Download Report
+                        </button> -->
+                        <button class="action-button secondary" onclick="newScan()">
+                            <i class="fas fa-redo"></i>
+                            New Scan
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <!-- <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>aphelioncyber</h4>
+                    <p>Professional cybersecurity solutions for modern businesses.</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 aphelioncyber. All rights reserved.</p>
+            </div>
+        </footer> -->
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
