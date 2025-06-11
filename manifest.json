@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Web Security Scanner",
+  "version": "1.0",
+  "description": "Comprehensive security analysis for your web applications",
+  "permissions": ["activeTab"],
+  "action": {
+    "default_popup": "index.html"
+  },
+  "icons": {
+    "16": "white_logo-removebg-preview.png",
+    "48": "white_logo-removebg-preview.png",
+    "128": "white_logo-removebg-preview.png"
+  }
+}
