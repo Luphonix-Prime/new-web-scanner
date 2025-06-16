@@ -1,0 +1,1 @@
+docker run -d -p 6969:80 --name webscanner luphonixprime/new-web-scanner:latest

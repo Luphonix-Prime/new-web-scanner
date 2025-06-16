@@ -97,7 +97,7 @@ function animateProgress(targetPercentage, duration) {
 
 // Send data to webhook
 async function sendToWebhook(data) {
-    const webhookUrl = 'http://n8n2.jaiminsomani.live:5678/webhook/start-sca';
+    const webhookUrl = 'http://n8n2.jaiminsomani.live:5678/webhook-test/start-sca';
     
     try {
         const response = await fetch(webhookUrl, {
