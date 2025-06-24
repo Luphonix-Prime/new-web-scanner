@@ -29,3 +29,15 @@ jobs:
           context: .
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/new-web-scanner:latest
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          script: |
+              docker pull ${{ secrets.DOCKERHUB_USERNAME }}/new-web-scanner:latest
+              docker stop webscanner || true
+              docker rm webscanner || true
+              docker run -d -p 6969:80 --name webscanner ${{ secrets.DOCKERHUB_USERNAME }}/new-web-scanner:latest
+        
