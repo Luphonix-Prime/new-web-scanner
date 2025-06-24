@@ -14,7 +14,7 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          docker build -t your-image-name .
-          docker push your-image-name
+          docker build -t image2 .
+          docker push image2
 
-          docker run -d -p 6969:80 --name webscanner new-web-scanner
+          docker run -d -p 6969:80\ --name webscanner new-web-scanner
