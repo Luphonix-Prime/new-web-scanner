@@ -1,0 +1,1858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Cyber Risk Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6a0dad;
+            --primary-dark: #4b0082;
+            --primary-light: #9c27b0;
+            --secondary: #2c5282;
+            --accent: #e91e63;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --danger: #f44336;
+            --light: #f8f9fa;
+            --dark: #212121;
+            --text: #333333;
+            --text-light: #666666;
+            --border: #e0e0e0;
+            --bg: #ffffff;
+            --card-bg: #ffffff;
+            --header-bg: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            --risk-high: #f44336;
+            --risk-medium: #ff9800;
+            --risk-low: #4caf50;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        [data-theme="dark"] {
+            --primary: #9c27b0;
+            --primary-dark: #7b1fa2;
+            --primary-light: #ba68c8;
+            --secondary: #1e88e5;
+            --accent: #ff4081;
+            --success: #81c784;
+            --warning: #ffb74d;
+            --danger: #e57373;
+            --light: #424242;
+            --dark: #f5f5f5;
+            --text: #e0e0e0;
+            --text-light: #9e9e9e;
+            --border: #616161;
+            --bg: #121212;
+            --card-bg: #1e1e1e;
+            --header-bg: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            --risk-input-bg: #2d2d2d;
+            --risk-input-border: #444;
+            --risk-input-text: #e0e0e0;
+            --risk-input-label: #f5f5f5;
+        }
+
+        body {
+            background-color: var(--bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            padding-top: 20px;
+            min-height: 100vh;
+            transition: var(--transition);
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px 40px;
+        }
+
+        .page {
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .page.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .dashboard-header {
+            background: var(--header-bg);
+            color: white;
+            border-radius: 12px;
+            padding: 25px 30px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .dashboard-header::before {
+            content: "";
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transition: var(--transition);
+        }
+
+        .dashboard-header::after {
+            content: "";
+            position: absolute;
+            bottom: -30px;
+            left: -30px;
+            width: 150px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            transition: var(--transition);
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 24px;
+            background-color: var(--card-bg);
+            overflow: hidden;
+            position: relative;
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-header {
+            background: linear-gradient(to right, rgba(106, 13, 173, 0.1), rgba(106, 13, 173, 0.05));
+            border-bottom: 1px solid var(--border);
+            padding: 18px 24px;
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .card-body {
+            padding: 30px;
+        }
+
+        .risk-high { color: var(--risk-high); }
+        .risk-medium { color: var(--risk-medium); }
+        .risk-low { color: var(--risk-low); }
+
+        .gauge-container {
+            width: 100%;
+            max-width: 220px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .risk-score-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            width: 100%;
+        }
+
+        .risk-score-value {
+            font-size: 2.8rem;
+            font-weight: 700;
+            line-height: 1;
+            font-family: 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
+            transition: color 0.5s ease;
+        }
+
+        .risk-score-label {
+            font-size: 1rem;
+            color: var(--text-light);
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        .control-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .control-item:last-child {
+            border-bottom: none;
+        }
+
+        .control-item:hover {
+            background-color: rgba(106, 13, 173, 0.05);
+            border-radius: 8px;
+        }
+
+        .control-checkbox {
+            margin-right: 16px;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .control-label {
+            flex: 1;
+            font-weight: 500;
+            color: var(--dark);
+            transition: var(--transition);
+        }
+
+        .control-status {
+            width: 100px;
+            text-align: right;
+            font-weight: 600;
+            color: var(--text-light);
+            transition: var(--transition);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            transition: var(--transition);
+        }
+
+        .status-high {
+            background-color: var(--risk-high);
+            animation: pulse 1.5s infinite;
+        }
+        .status-medium { background-color: var(--risk-medium); }
+        .status-low { background-color: var(--risk-low); }
+
+        .risk-input-group {
+            margin-bottom: 20px;
+            background: var(--risk-input-bg);
+            padding: 16px;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .risk-input-group::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: var(--primary);
+            transition: var(--transition);
+        }
+
+        .risk-input-label {
+            color: var(--risk-input-label);
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 280px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .risk-detail {
+            display: flex;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border);
+            transition: background-color 0.3s;
+        }
+
+        .risk-detail:hover {
+            background-color: rgba(106, 13, 173, 0.05);
+        }
+
+        .risk-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            flex-shrink: 0;
+            font-size: 18px;
+            transition: var(--transition);
+        }
+
+        .risk-icon.high {
+            background: rgba(244, 67, 54, 0.15);
+            color: var(--risk-high);
+        }
+        .risk-icon.medium {
+            background: rgba(255, 152, 0, 0.15);
+            color: var(--risk-medium);
+        }
+        .risk-icon.low {
+            background: rgba(76, 175, 80, 0.15);
+            color: var(--risk-low);
+        }
+
+        .risk-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--dark);
+            transition: var(--transition);
+        }
+
+        .risk-description {
+            font-size: 0.92rem;
+            color: var(--text-light);
+            line-height: 1.5;
+            transition: var(--transition);
+        }
+
+        .badge {
+            font-weight: 600;
+            padding: 0.5em 0.8em;
+            font-size: 0.8em;
+            border-radius: 8px;
+            min-width: 80px;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .badge.bg-danger {
+            animation: pulse 1.5s infinite;
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .nav-btn::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+            z-index: -1;
+        }
+
+        .nav-btn:hover::after {
+            left: 100%;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-btn:disabled {
+            background: var(--text-light);
+            cursor: not-allowed;
+        }
+
+        .progress-container {
+            height: 10px;
+            background: var(--border);
+            border-radius: 5px;
+            margin: 15px 0;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 1s ease;
+            background: linear-gradient(90deg, var(--risk-low), var(--risk-medium), var(--risk-high));
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .risk-factors-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            padding-bottom: 2px;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 100px;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .risk-matrix {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .risk-matrix-item {
+            flex: 1;
+            min-width: 120px;
+            padding: 15px;
+            border-radius: 10px;
+            background: rgba(106, 13, 173, 0.05);
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .risk-matrix-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: var(--primary);
+        }
+
+        .risk-matrix-label {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .theme-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            border: none;
+            transition: var(--transition);
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .risk-impact {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 8px;
+            background-color: rgba(0, 0, 0, 0.1);
+            color: var(--text);
+            transition: var(--transition);
+        }
+
+        .control-coverage-value {
+            font-weight: 600;
+            color: var(--primary);
+            margin-left: 8px;
+        }
+
+        .risk-factor-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-right: 6px;
+            margin-bottom: 6px;
+            background-color: rgba(106, 13, 173, 0.1);
+            color: var(--primary);
+            transition: var(--transition);
+        }
+
+        /* Critical Warning Message */
+        .critical-warning {
+            background-color: rgba(244, 67, 54, 0.15);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border-left: 5px solid var(--danger);
+            animation: pulse-bg 2s infinite;
+        }
+
+        .critical-warning h3 {
+            color: var(--danger);
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .critical-warning p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .critical-warning ul {
+            padding-left: 20px;
+            margin-bottom: 20px;
+        }
+
+        .critical-warning li {
+            margin-bottom: 10px;
+        }
+
+        .critical-warning .contact-btn {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .critical-warning .contact-btn i {
+            margin-right: 10px;
+        }
+
+        .critical-warning .contact-btn:hover {
+            background: #d32f2f;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(244, 67, 54, 0.3);
+        }
+
+        /* Enhanced Recommended Actions Styling */
+        .recommended-actions-card {
+            background-color: rgba(106, 13, 173, 0.05);
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid rgba(106, 13, 173, 0.1);
+            box-shadow: 0 4px 10px rgba(106, 13, 173, 0.08);
+            transition: var(--transition);
+        }
+
+        .recommended-actions-card h3 {
+            font-size: 1.3rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(106, 13, 173, 0.1);
+            display: flex;
+            align-items: center;
+            font-weight: 700;
+        }
+
+        .recommended-actions-card h3 i {
+            margin-right: 12px;
+            font-size: 1.5rem;
+            background: rgba(106, 13, 173, 0.15);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .recommended-actions-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .recommended-actions-list li {
+            position: relative;
+            padding-left: 30px;
+            margin-bottom: 18px;
+            font-size: 1.05rem;
+            line-height: 1.6;
+            color: var(--text);
+            transition: all 0.3s ease;
+        }
+
+        .recommended-actions-list li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 8px;
+            width: 18px;
+            height: 18px;
+            background-color: var(--primary);
+            border-radius: 50%;
+        }
+
+        .recommended-actions-list li::after {
+            content: "";
+            position: absolute;
+            left: 7px;
+            top: 11px;
+            width: 4px;
+            height: 8px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .recommended-actions-list li:hover {
+            transform: translateX(5px);
+            color: var(--primary-dark);
+        }
+
+        /* Styling for number inputs */
+        .risk-number-group {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .risk-number-group input {
+            width: 100%;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--risk-input-bg);
+            color: var(--risk-input-text);
+            font-weight: 600;
+            text-align: center;
+            transition: var(--transition);
+            font-size: 1rem;
+        }
+
+        .risk-number-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.2rem rgba(106, 13, 173, 0.25);
+            outline: none;
+        }
+
+        .input-error {
+            border-color: var(--danger) !important;
+            animation: shake 0.5s ease;
+        }
+
+        .error-message {
+            color: var(--danger);
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display:none ;
+        }
+
+        input:invalid {
+            border-color: var(--danger);
+            background-color: rgba(244, 67, 54, 0.05);
+        }
+
+        /* Database connection status */
+        .db-status {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1000;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background-color: var(--success);
+            color: white;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .db-status i {
+            margin-right: 8px;
+        }
+
+        .db-status.offline {
+            background-color: var(--danger);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(244, 67, 54, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
+        }
+
+        @keyframes pulse-bg {
+            0% { background-color: rgba(244, 67, 54, 0.15); }
+            50% { background-color: rgba(244, 67, 54, 0.25); }
+            100% { background-color: rgba(244, 67, 54, 0.15); }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0px); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
+            20%, 40%, 60%, 80% { transform: translateX(3px); }
+        }
+
+        @media (max-width: 992px) {
+            .risk-factors-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .grid-layout, .controls-grid, .risk-factors-grid {
+                grid-template-columns: 1fr;
+            }
+            .gauge-container {
+                max-width: 180px;
+            }
+            .top-risks-card .row {
+                flex-direction: column;
+            }
+            .recommended-actions-card {
+                padding: 20px;
+            }
+            .critical-warning {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="db-status" id="dbStatus">
+        <i class="fas fa-database"></i> Database Connected
+    </div>
+
+    <button class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <div class="dashboard-container">
+        <!-- Page 1: Control Coverage Input -->
+        <div id="page1" class="page active">
+            <div class="dashboard-header">
+                <h1><i class="fas fa-sliders-h me-3"></i> Control Coverage Assessment</h1>
+                <p class="text-white-50 mb-0">Step 1 of 3: Configure your security controls</p>
+            </div>
+
+            <!-- Critical Warning Message -->
+            <div class="critical-warning" id="criticalWarning" style="display: none;">
+                <h3><i class="fas fa-exclamation-triangle me-2"></i> Control Coverage: <span id="coverage-percentage">0</span>% – Critical Risk Identified</h3>
+                <p>Your current security configuration indicates insufficient protection safeguards in place. This leaves your digital assets vulnerable to cyber threats, data breaches, and system compromise.</p>
+                <p><strong>Immediate Action Required:</strong></p>
+                <p>We strongly recommend you connect with the AphelionCyber team to implement essential cybersecurity controls and solutions tailored to your environment. Our experts will help you:</p>
+                <ul>
+                    <li>Assess your current risk posture in depth</li>
+                    <li>Deploy critical protection measures (firewalls, endpoint security, IAM, etc.)</li>
+                    <li>Establish compliance-ready frameworks and monitoring</li>
+                </ul>
+                <p>Don't leave your infrastructure exposed. Reach out now to secure your systems and reduce your cyber risk effectively.</p>
+                <button class="contact-btn">
+                    <i class="fas fa-headset me-2"></i> Contact with Aphelioncyber Pvt. Ltd.
+                </button>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-shield-alt me-2"></i> Security Controls
+                    <span class="control-coverage-value" id="coverageValue">83%</span>
+                </div>
+                <div class="card-body">
+                    <div class="controls-grid" id="controlsGrid">
+                        <!-- Controls will be loaded from database -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end mt-4">
+                <button id="nextToPage2" class="nav-btn">
+                    Next <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Page 2: Risk Distribution Input -->
+        <div id="page2" class="page">
+            <div class="dashboard-header">
+                <h1><i class="fas fa-chart-pie me-3"></i> Risk Distribution Assessment</h1>
+                <p class="text-white-50 mb-0">Step 2 of 3: Configure your risk distribution (0-40)</p>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-balance-scale me-2"></i> Risk Factors
+                </div>
+                <div class="card-body">
+                    <div class="risk-factors-grid" id="riskFactorsContainer">
+                        <!-- Risk factors will be loaded from database -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <button id="backToPage1" class="nav-btn">
+                    <i class="fas fa-arrow-left me-2"></i> Back
+                </button>
+                <button id="nextToPage3" class="nav-btn">
+                    Generate Dashboard <i class="fas fa-chart-bar ms-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Page 3: Dashboard Results -->
+        <div id="page3" class="page">
+            <div class="dashboard-header">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h1><i class="fas fa-shield-alt me-3"></i> Enterprise Cyber Risk Dashboard</h1>
+                        <p class="text-white-50 mb-0"><i class="far fa-clock me-2"></i> Last updated: <span id="update-time"></span></p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button class="btn nav-btn" id="refresh-btn">
+                            <i class="fas fa-sync-alt me-2"></i> Refresh Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-layout">
+                <!-- Risk Scorecard -->
+                <div class="card risk-score-card">
+                    <div class="card-header">
+                        <i class="fas fa-chart-line me-2"></i> Overall Risk Score
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="gauge-container">
+                            <canvas id="scoreGauge"></canvas>
+                            <div class="risk-score-display">
+                                <div id="risk-score" class="risk-score-value risk-low">77</div>
+                                <div class="risk-score-label">Status: <strong id="risk-level" class="risk-low">Low Risk</strong></div>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <div class="progress-container">
+                                <div class="progress-bar" id="risk-progress" style="width: 77%;"></div>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>0</span>
+                                <span>Risk Score</span>
+                                <span>100</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Control Coverage Card -->
+                <div class="card control-coverage-card">
+                    <div class="card-header">
+                        <i class="fas fa-sliders-h me-2"></i> Control Coverage
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="radarChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Risk Distribution Card -->
+                <div class="card risk-distribution-card">
+                    <div class="card-header">
+                        <i class="fas fa-chart-pie me-2"></i> Risk Distribution
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="doughnutChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Risks Card -->
+                <div class="card top-risks-card full-width">
+                    <div class="card-header">
+                        <i class="fas fa-exclamation-triangle me-2"></i> Top Risks
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="risk-list" id="topRisksList">
+                                    <!-- Top risks will be loaded from database -->
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="recommended-actions-card">
+                                    <h3><i class="fas fa-lightbulb"></i> Recommended Actions</h3>
+                                    <ul class="recommended-actions-list" id="recommendedActions">
+                                        <!-- Recommended actions will be loaded from database -->
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-start mt-4">
+                <button id="backToPage2" class="nav-btn">
+                    <i class="fas fa-arrow-left me-2"></i> Back to Configuration
+                </button>
+            </div>
+        </div>
+    </div>
+
+     <script>
+        // Database factory function
+        function createDatabase() {
+            return {
+                controls: [
+                    { id: 'firewall', name: 'Firewall Protection', weight: 15, checked: true, impact: 'Critical', category: 'Network' },
+                    { id: 'mfa', name: 'Multi-Factor Auth', weight: 20, checked: true, impact: 'Critical', category: 'Access' },
+                    { id: 'backup', name: 'Data Backup', weight: 18, checked: true, impact: 'Critical', category: 'Data' },
+                    { id: 'siem', name: 'SIEM Monitoring', weight: 25, checked: false, impact: 'High', category: 'Monitoring' },
+                    { id: 'edr', name: 'Endpoint Detection', weight: 22, checked: true, impact: 'Critical', category: 'Endpoint' },
+                    { id: 'patching', name: 'Patch Management', weight: 20, checked: true, impact: 'High', category: 'System' },
+                    { id: 'encryption', name: 'Data Encryption', weight: 15, checked: true, impact: 'Medium', category: 'Data' },
+                    { id: 'iam', name: 'IAM System', weight: 18, checked: true, impact: 'Critical', category: 'Access' },
+                    { id: 'vulnscan', name: 'Vulnerability Scanning', weight: 15, checked: true, impact: 'High', category: 'System' },
+                    { id: 'response', name: 'Incident Response Plan', weight: 20, checked: false, impact: 'High', category: 'Process' },
+                    { id: 'training', name: 'Security Awareness Training', weight: 12, checked: true, impact: 'Medium', category: 'People' },
+                    { id: 'access', name: 'Access Control Policy', weight: 15, checked: true, impact: 'Critical', category: 'Access' }
+                ],
+                riskFactors: [
+                    // Technical Risk Factors
+                    { id: 'threat', name: 'Threat Exposure', value: 25, category: 'External', description: 'Exposure to external cyber threats and attacks' },
+                    { id: 'vuln', name: 'Vulnerabilities', value: 25, category: 'Technical', description: 'Known vulnerabilities in systems and applications' },
+                    { id: 'misconfig', name: 'System Misconfigurations', value: 25, category: 'Technical', description: 'Improper system configurations leading to security gaps' },
+                    { id: 'endpoint', name: 'Endpoint Security Gaps', value: 20, category: 'Technical', description: 'Lack of proper endpoint protection controls' },
+                    { id: 'network', name: 'Network Security Gaps', value: 20, category: 'Technical', description: 'Inadequate network segmentation and protection' },
+                    { id: 'cloud', name: 'Cloud Security Risks', value: 20, category: 'Technical', description: 'Misconfigurations in cloud environments' },
+                    { id: 'api', name: 'API Security Risks', value: 15, category: 'Technical', description: 'Insecure API implementations and exposures' },
+                    { id: 'mobile', name: 'Mobile Device Risks', value: 15, category: 'Technical', description: 'Unsecured mobile devices accessing corporate resources' },
+
+                    // Operational Risk Factors
+                    { id: 'patching', name: 'Patch Management Delays', value: 25, category: 'Operational', description: 'Delays in applying critical security patches' },
+                    { id: 'backup', name: 'Backup & Recovery Risks', value: 25, category: 'Operational', description: 'Inadequate backup and recovery processes' },
+                    { id: 'monitoring', name: 'Monitoring Gaps', value: 20, category: 'Operational', description: 'Insufficient security monitoring capabilities' },
+                    { id: 'incident', name: 'Incident Response Readiness', value: 20, category: 'Operational', description: 'Lack of proper incident response planning' },
+                    { id: 'bcm', name: 'Business Continuity Risks', value: 20, category: 'Operational', description: 'Gaps in business continuity planning' },
+                    { id: 'change', name: 'Change Management Risks', value: 15, category: 'Operational', description: 'Weak change management processes' },
+                    { id: 'asset', name: 'Asset Inventory Gaps', value: 15, category: 'Operational', description: 'Incomplete IT asset inventory' },
+
+                    // Governance Risk Factors
+                    { id: 'policies', name: 'Policy Gaps', value: 20, category: 'Governance', description: 'Missing or outdated security policies' },
+                    { id: 'compliance', name: 'Compliance Risks', value: 15, category: 'Governance', description: 'Non-compliance with regulatory requirements' },
+                    { id: 'audit', name: 'Audit Findings', value: 15, category: 'Governance', description: 'Unresolved security audit findings' },
+                    { id: 'vendor', name: 'Third-Party Vendor Risks', value: 20, category: 'Governance', description: 'Security risks from third-party vendors' },
+                    { id: 'access', name: 'Access Control Weaknesses', value: 20, category: 'Governance', description: 'Excessive or inappropriate access privileges' },
+                    { id: 'training', name: 'Security Training Gaps', value: 15, category: 'Governance', description: 'Insufficient security awareness training' },
+
+                    // Human Risk Factors
+                    { id: 'phishing', name: 'Phishing Susceptibility', value: 25, category: 'Human', description: 'Employee vulnerability to phishing attacks' },
+                    { id: 'insider', name: 'Insider Threats', value: 20, category: 'Human', description: 'Potential malicious or negligent insider actions' },
+                    { id: 'shadow', name: 'Shadow IT Risks', value: 15, category: 'Human', description: 'Unauthorized use of IT systems and services' },
+                    { id: 'social', name: 'Social Engineering Risks', value: 20, category: 'Human', description: 'Vulnerability to social engineering attacks' }
+                ],
+                topRisks: [
+                    {
+                        title: 'Phishing Training Gaps',
+                        description: 'Employees lack adequate training to identify sophisticated phishing attempts, leading to increased susceptibility to social engineering attacks.',
+                        severity: 'Critical',
+                        category: 'People',
+                        icon: 'skull-crossbones'
+                    },
+                    {
+                        title: 'Unpatched Critical Systems',
+                        description: 'Security patches not applied to critical systems, exposing the organization to known vulnerabilities and exploits.',
+                        severity: 'Critical',
+                        category: 'System',
+                        icon: 'lock-open'
+                    },
+                    {
+                        title: 'Vendor Access Overprivileged',
+                        description: 'Third-party vendors have excessive system access beyond their operational requirements, creating potential security gaps.',
+                        severity: 'High',
+                        category: 'Access',
+                        icon: 'user-shield'
+                    },
+                    {
+                        title: 'Misconfigured Cloud Storage',
+                        description: 'Sensitive data exposed through improperly configured cloud storage permissions and access controls.',
+                        severity: 'High',
+                        category: 'Data',
+                        icon: 'cloud'
+                    },
+                    {
+                        title: 'Insufficient Log Monitoring',
+                        description: 'Security logs not being properly monitored and analyzed, reducing detection capabilities for potential breaches.',
+                        severity: 'High',
+                        category: 'Monitoring',
+                        icon: 'search'
+                    }
+                ],
+                recommendedActions: [
+                    'Implement mandatory phishing simulation training for all employees quarterly',
+                    'Establish a 30-day SLA for critical security patch deployment',
+                    'Conduct quarterly vendor access reviews with least privilege enforcement',
+                    'Deploy automated cloud security posture management tools',
+                    'Implement centralized log management with SIEM solution',
+                    'Conduct API security assessment and implement WAF protection',
+                    'Enforce mobile device management for all corporate devices',
+                    'Implement privileged access management solution for admin accounts',
+                    'Conduct annual security awareness training for all employees',
+                    'Perform quarterly vulnerability scanning and penetration testing'
+                ],
+                lastUpdated: new Date().toISOString()
+            };
+        }
+
+        // Database manager
+        const DatabaseManager = {
+            db: null,
+
+            init: function() {
+                // Try to load from localStorage
+                const savedDb = localStorage.getItem('cyberRiskDashboardDB');
+
+                if (savedDb) {
+                    try {
+                        this.db = JSON.parse(savedDb);
+                        // Validate the loaded database
+                        if (!this.db.controls || !this.db.riskFactors) {
+                            throw new Error("Invalid database structure");
+                        }
+                        console.log("Loaded database from localStorage");
+                    } catch (e) {
+                        console.warn("Failed to load database from localStorage, creating new one", e);
+                        this.resetDatabase();
+                    }
+                } else {
+                    this.resetDatabase();
+                }
+
+                return this.db;
+            },
+
+            resetDatabase: function() {
+                this.db = createDatabase();
+                this.saveToLocalStorage();
+                console.log("Created new database");
+            },
+
+            saveToLocalStorage: function() {
+                this.db.lastUpdated = new Date().toISOString();
+                localStorage.setItem('cyberRiskDashboardDB', JSON.stringify(this.db));
+            },
+
+            updateControl: function(id, checked) {
+                const control = this.db.controls.find(c => c.id === id);
+                if (control) {
+                    control.checked = checked;
+                    this.saveToLocalStorage();
+                    return true;
+                }
+                return false;
+            },
+
+            updateRiskFactor: function(id, value) {
+                const factor = this.db.riskFactors.find(f => f.id === id);
+                if (factor) {
+                    factor.value = value;
+                    this.saveToLocalStorage();
+                    return true;
+                }
+                return false;
+            },
+
+            getControls: function() {
+                return this.db.controls;
+            },
+
+            getRiskFactors: function() {
+                return this.db.riskFactors;
+            },
+
+            getTopRisks: function() {
+                return this.db.topRisks;
+            },
+
+            getRecommendedActions: function() {
+                return this.db.recommendedActions;
+            },
+
+            getLastUpdated: function() {
+                return new Date(this.db.lastUpdated);
+            }
+        };
+
+        // Initialize the database manager
+        DatabaseManager.init();
+
+        // Set last updated time
+        document.getElementById('update-time').textContent = DatabaseManager.getLastUpdated().toLocaleString();
+
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+        // Check for saved theme preference or use system preference
+        const currentTheme = localStorage.getItem('theme') ||
+                            (prefersDarkScheme.matches ? 'dark' : 'light');
+
+        // Apply the current theme
+        if (currentTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+            themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+        }
+
+        // Toggle theme on button click
+        themeToggle.addEventListener('click', function() {
+            let theme;
+            if (document.documentElement.hasAttribute('data-theme')) {
+                document.documentElement.removeAttribute('data-theme');
+                theme = 'light';
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+                // Add animation
+                themeToggle.style.animation = 'float 1s ease';
+                setTimeout(() => {
+                    themeToggle.style.animation = '';
+                }, 1000);
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                theme = 'dark';
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+                // Add animation
+                themeToggle.style.animation = 'shake 0.5s ease';
+                setTimeout(() => {
+                    themeToggle.style.animation = '';
+                }, 500);
+            }
+            localStorage.setItem('theme', theme);
+        });
+
+        // Navigation between pages
+        document.getElementById('nextToPage2').addEventListener('click', function() {
+            document.getElementById('page1').classList.remove('active');
+            document.getElementById('page2').classList.add('active');
+            // Add animation to next button
+            this.style.animation = 'float 1s ease';
+            setTimeout(() => {
+                this.style.animation = '';
+            }, 1000);
+        });
+
+        document.getElementById('backToPage1').addEventListener('click', function() {
+            document.getElementById('page2').classList.remove('active');
+            document.getElementById('page1').classList.add('active');
+            // Add animation to back button
+            this.style.animation = 'shake 0.5s ease';
+            setTimeout(() => {
+                this.style.animation = '';
+            }, 500);
+        });
+
+        document.getElementById('nextToPage3').addEventListener('click', function() {
+            // Validate inputs before proceeding
+            let valid = true;
+            const inputs = document.querySelectorAll('.risk-number-group input');
+
+            inputs.forEach(input => {
+                const value = parseInt(input.value);
+                if (isNaN(value) || value < 0 || value > 40) {
+                    input.classList.add('input-error');
+                    const errorId = input.id.replace('-input', '-error');
+                    const errorElement = document.getElementById(errorId);
+                    if (errorElement) {
+                        errorElement.style.display = 'block';
+                    }
+                    valid = false;
+                } else {
+                    // Update the database with the new value
+                    const factorId = input.id.replace('-input', '');
+                    DatabaseManager.updateRiskFactor(factorId, value);
+                }
+            });
+
+            if (valid) {
+                document.getElementById('page2').classList.remove('active');
+                document.getElementById('page3').classList.add('active');
+                updateDashboard();
+                // Add animation to generate button
+                this.style.animation = 'float 1s ease';
+                setTimeout(() => {
+                    this.style.animation = '';
+                }, 1000);
+            } else {
+                // Shake the button to indicate error
+                this.style.animation = 'shake 0.5s ease';
+                setTimeout(() => {
+                    this.style.animation = '';
+                }, 500);
+            }
+        });
+
+        document.getElementById('backToPage2').addEventListener('click', function() {
+            document.getElementById('page3').classList.remove('active');
+            document.getElementById('page2').classList.add('active');
+            // Add animation to back button
+            this.style.animation = 'shake 0.5s ease';
+            setTimeout(() => {
+                this.style.animation = '';
+            }, 500);
+        });
+
+        // Load controls from database
+        function loadControls() {
+            const controlsGrid = document.getElementById('controlsGrid');
+            controlsGrid.innerHTML = '';
+
+            DatabaseManager.getControls().forEach(control => {
+                const controlItem = document.createElement('div');
+                controlItem.className = 'control-item';
+                controlItem.innerHTML = `
+                    <input type="checkbox" class="form-check-input control-checkbox" id="${control.id}"
+                           ${control.checked ? 'checked' : ''} data-weight="${control.weight}">
+                    <label class="control-label" for="${control.id}">${control.name}
+                        <span class="risk-impact">${control.impact}</span>
+                        <span class="risk-factor-tag">${control.category}</span>
+                    </label>
+                    <div class="control-status">
+                        <span class="status-indicator ${control.checked ? 'status-low' : 'status-high'}"></span>
+                        <span>${control.checked ? 'Enabled' : 'Disabled'}</span>
+                    </div>
+                `;
+                controlsGrid.appendChild(controlItem);
+            });
+
+            initCheckboxes();
+            updateControlCoverage();
+        }
+
+        // Load risk factors from database
+        function loadRiskFactors() {
+            const container = document.getElementById('riskFactorsContainer');
+            container.innerHTML = '';
+
+            DatabaseManager.getRiskFactors().forEach(factor => {
+                const factorGroup = document.createElement('div');
+                factorGroup.className = 'risk-input-group';
+                factorGroup.innerHTML = `
+                    <div class="risk-input-label">
+                        <span>${factor.name} <span class="risk-factor-tag">${factor.category}</span></span>
+                        <small class="d-block text-muted">${factor.description}</small>
+                    </div>
+                    <div class="risk-number-group">
+                        <input type="number" min="0" max="40" value="${factor.value}"
+                               id="${factor.id}-input" required>
+                    </div>
+                    <div class="error-message" id="${factor.id}-error">Value must be between 0 and 40</div>
+                `;
+                container.appendChild(factorGroup);
+            });
+
+            initNumberInputs();
+        }
+
+        // Load top risks from database
+        function loadTopRisks() {
+            const container = document.getElementById('topRisksList');
+            container.innerHTML = '';
+
+            DatabaseManager.getTopRisks().forEach(risk => {
+                const riskDetail = document.createElement('div');
+                riskDetail.className = 'risk-detail';
+                riskDetail.innerHTML = `
+                    <div class="risk-icon ${risk.severity.toLowerCase() === 'critical' ? 'high' : 'medium'}">
+                        <i class="fas fa-${risk.icon}"></i>
+                    </div>
+                    <div class="risk-detail-content">
+                        <div class="risk-title">${risk.title} <span class="risk-factor-tag">${risk.category}</span></div>
+                        <div class="risk-description">${risk.description}</div>
+                    </div>
+                    <div>
+                        <span class="badge ${risk.severity.toLowerCase() === 'critical' ? 'bg-danger' : 'bg-warning'}">${risk.severity}</span>
+                    </div>
+                `;
+                container.appendChild(riskDetail);
+            });
+        }
+
+        // Load recommended actions from database
+        function loadRecommendedActions() {
+            const container = document.getElementById('recommendedActions');
+            container.innerHTML = '';
+
+            DatabaseManager.getRecommendedActions().forEach(action => {
+                const li = document.createElement('li');
+                li.textContent = action;
+                container.appendChild(li);
+            });
+        }
+
+        // Risk categories and weights
+        const riskData = {
+            labels: [],
+            weights: [],
+            bgColors: []
+        };
+
+        // Control coverage data
+        const controlCoverageData = {
+            labels: [],
+            datasets: [{
+                label: 'Implementation Status',
+                data: [],
+                backgroundColor: 'rgba(106, 13, 173, 0.2)',
+                borderColor: '#6a0dad',
+                pointBackgroundColor: '#6a0dad',
+                pointRadius: 5,
+                pointHoverRadius: 7
+            }]
+        };
+
+        // Initialize charts
+        let gaugeChart, radarChart, doughnutChart;
+
+        // Calculate control coverage percentage
+        function calculateControlCoverage() {
+            const checkboxes = document.querySelectorAll('.control-checkbox');
+            let totalWeight = 0;
+            let coveredWeight = 0;
+
+            checkboxes.forEach(checkbox => {
+                const weight = parseInt(checkbox.dataset.weight);
+                totalWeight += weight;
+                if (checkbox.checked) {
+                    coveredWeight += weight;
+                }
+            });
+
+            return Math.round((coveredWeight / totalWeight) * 100);
+        }
+
+        // Calculate total risk score based on coverage and distribution
+        function calculateRiskScore() {
+            // Get coverage percentage
+            const coverage = calculateControlCoverage();
+
+            // Get risk distribution values
+            let distributionScore = 0;
+            let totalWeight = 0;
+
+            DatabaseManager.getRiskFactors().forEach(factor => {
+                distributionScore += factor.value;
+                totalWeight += 40; // Each factor has max 40
+            });
+
+            // Calculate distribution score (percentage)
+            const distributionPercentage = (distributionScore / totalWeight) * 100;
+
+            // Adjust by coverage (higher coverage = lower risk)
+            const riskScore = distributionPercentage * (1 - coverage / 100);
+
+            return Math.min(Math.round(riskScore), 100);
+        }
+
+        // Update control coverage display
+        function updateControlCoverage() {
+            const coverage = calculateControlCoverage();
+            document.getElementById('coverageValue').textContent = coverage + '%';
+
+            // Show/hide critical warning based on coverage <= 30
+            const warningDiv = document.getElementById('criticalWarning');
+            if (coverage <= 30) {
+                warningDiv.style.display = 'block';
+                // Update the coverage percentage in the warning
+                document.getElementById('coverage-percentage').textContent = coverage;
+            } else {
+                warningDiv.style.display = 'none';
+            }
+
+            // Update the coverage value with animation
+            const element = document.getElementById('coverageValue');
+            element.style.transform = 'scale(1.2)';
+            element.style.color = '#e91e63';
+            setTimeout(() => {
+                element.style.transform = 'scale(1)';
+                element.style.color = '';
+            }, 500);
+        }
+
+        // Update risk level display with animation
+        function updateRiskLevel(score) {
+            const scoreElement = document.getElementById('risk-score');
+            const levelElement = document.getElementById('risk-level');
+            const progressBar = document.getElementById('risk-progress');
+
+            const currentScore = parseInt(scoreElement.textContent);
+            const targetScore = Math.min(Math.round(score), 100);
+            const duration = 1500; // ms
+            const startTime = Date.now();
+
+            function animateScore() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easedProgress = progress < 0.5
+                    ? 2 * progress * progress
+                    : -1 + (4 - 2 * progress) * progress;
+
+                const currentValue = Math.round(currentScore + (targetScore - currentScore) * easedProgress);
+                scoreElement.textContent = currentValue;
+                progressBar.style.width = currentValue + '%';
+
+                if (progress < 1) {
+                    requestAnimationFrame(animateScore);
+                } else {
+                    scoreElement.textContent = targetScore;
+                    progressBar.style.width = targetScore + '%';
+
+                    // Update color classes based on thresholds: 0-30 low, 31-60 medium, 61-100 high
+                    scoreElement.className = 'risk-score-value ';
+                    levelElement.className = '';
+
+                    if (targetScore >= 61) {
+                        scoreElement.classList.add('risk-high');
+                        levelElement.classList.add('risk-high');
+                        levelElement.textContent = 'High Risk';
+                    } else if (targetScore >= 31) {
+                        scoreElement.classList.add('risk-medium');
+                        levelElement.classList.add('risk-medium');
+                        levelElement.textContent = 'Medium Risk';
+                    } else {
+                        scoreElement.classList.add('risk-low');
+                        levelElement.classList.add('risk-low');
+                        levelElement.textContent = 'Low Risk';
+                    }
+                }
+            }
+
+            animateScore();
+        }
+
+        // Initialize number inputs
+        function initNumberInputs() {
+            document.querySelectorAll('input[type="number"]').forEach(input => {
+                input.addEventListener('input', function() {
+                    // Ensure value is within bounds
+                    if (this.value < 0) this.value = 0;
+                    if (this.value > 40) this.value = 40;
+
+                    // Remove error state when valid
+                    if (this.checkValidity()) {
+                        this.classList.remove('input-error');
+                        const errorId = this.id.replace('-input', '-error');
+                        const errorElement = document.getElementById(errorId);
+                        if (errorElement) {
+                            errorElement.style.display = 'none';
+                        }
+                    }
+                });
+
+                // Validate on blur
+                input.addEventListener('blur', function() {
+                    const value = parseInt(this.value);
+                    if (isNaN(value) || value < 0 || value > 40) {
+                        this.classList.add('input-error');
+                        const errorId = this.id.replace('-input', '-error');
+                        const errorElement = document.getElementById(errorId);
+                        if (errorElement) {
+                            errorElement.style.display = 'block';
+                        }
+                    } else {
+                        this.classList.remove('input-error');
+                        const errorId = this.id.replace('-input', '-error');
+                        const errorElement = document.getElementById(errorId);
+                        if (errorElement) {
+                            errorElement.style.display = 'none';
+                        }
+                    }
+                });
+            });
+        }
+
+        // Initialize checkbox interactions
+        function initCheckboxes() {
+            document.querySelectorAll('.control-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const statusElement = this.closest('.control-item').querySelector('.status-indicator');
+                    const statusText = this.closest('.control-item').querySelector('.control-status span:last-child');
+
+                    if (!this.checked) {
+                        statusElement.className = 'status-indicator status-high';
+                        statusText.textContent = 'Disabled';
+                        // Add shake animation
+                        this.closest('.control-item').style.animation = 'shake 0.5s ease';
+                        setTimeout(() => {
+                            this.closest('.control-item').style.animation = '';
+                        }, 500);
+                    } else {
+                        statusElement.className = 'status-indicator status-low';
+                        statusText.textContent = 'Enabled';
+                        // Add float animation
+                        this.closest('.control-item').style.animation = 'float 1s ease';
+                        setTimeout(() => {
+                            this.closest('.control-item').style.animation = '';
+                        }, 1000);
+                    }
+
+                    // Update the database
+                    DatabaseManager.updateControl(this.id, this.checked);
+
+                    // Update control coverage
+                    updateControlCoverage();
+                });
+            });
+        }
+
+        // Update all charts that depend on risk data
+        function updateRiskCharts() {
+            const newScore = calculateRiskScore();
+            updateRiskLevel(newScore);
+
+            // Update risk data for doughnut chart
+            riskData.labels = [];
+            riskData.weights = [];
+            riskData.bgColors = [];
+
+            // Group risk factors by category for the chart
+            const categories = {};
+            DatabaseManager.getRiskFactors().forEach(factor => {
+                if (!categories[factor.category]) {
+                    categories[factor.category] = {
+                        total: 0,
+                        count: 0
+                    };
+                }
+                categories[factor.category].total += factor.value;
+                categories[factor.category].count++;
+            });
+
+            // Calculate average for each category
+            const colors = ['#e74c3c', '#f39c12', '#3498db', '#2ecc71', '#9b59b6', '#1abc9c', '#e67e22'];
+            let colorIndex = 0;
+
+            for (const [category, data] of Object.entries(categories)) {
+                const average = Math.round(data.total / data.count);
+                riskData.labels.push(category);
+                riskData.weights.push(average);
+                riskData.bgColors.push(colors[colorIndex % colors.length]);
+                colorIndex++;
+            }
+
+            // Update doughnut chart
+            if (doughnutChart) {
+                doughnutChart.data.labels = riskData.labels;
+                doughnutChart.data.datasets[0].data = riskData.weights;
+                doughnutChart.data.datasets[0].backgroundColor = riskData.bgColors;
+                doughnutChart.update();
+            }
+        }
+
+        // Update control coverage data based on checkboxes
+        function updateControlCoverageData() {
+            controlCoverageData.labels = [];
+            controlCoverageData.datasets[0].data = [];
+
+            DatabaseManager.getControls().forEach(control => {
+                controlCoverageData.labels.push(control.name);
+                const checkbox = document.getElementById(control.id);
+                const value = checkbox && checkbox.checked ? 100 : 0;
+                controlCoverageData.datasets[0].data.push(value);
+            });
+
+            // Special case for response plan (partial implementation)
+            const responseCheckbox = document.getElementById('response');
+            if (responseCheckbox) {
+                controlCoverageData.datasets[0].data[9] = responseCheckbox.checked ? 100 : 50;
+            }
+
+            // Set the new data
+            if (radarChart) {
+                radarChart.data.labels = controlCoverageData.labels;
+                radarChart.data.datasets[0].data = controlCoverageData.datasets[0].data;
+                radarChart.update();
+            }
+        }
+
+        // Update the dashboard with current data
+        function updateDashboard() {
+            // Update control coverage data
+            updateControlCoverageData();
+
+            // Update all charts
+            updateRiskCharts();
+
+            // Update gauge chart
+            if (gaugeChart) {
+                gaugeChart.data.datasets[0].data = [calculateRiskScore(), 100 - calculateRiskScore()];
+                gaugeChart.update();
+            }
+        }
+
+        // Initialize charts when page 3 is loaded
+        function initCharts() {
+            // Gauge Chart
+            const gaugeCtx = document.getElementById('scoreGauge').getContext('2d');
+            gaugeChart = new Chart(gaugeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Risk', 'Remaining'],
+                    datasets: [{
+                        data: [calculateRiskScore(), 100 - calculateRiskScore()],
+                        backgroundColor: ['#6a0dad', 'rgba(106, 13, 173, 0.1)'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    circumference: 270,
+                    rotation: 225,
+                    cutout: '80%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                    },
+                    animation: {
+                        animateRotate: true,
+                        animateScale: true,
+                        duration: 1500
+                    }
+                }
+            });
+
+            // Radar Chart - Control Coverage
+            const radarCtx = document.getElementById('radarChart').getContext('2d');
+            radarChart = new Chart(radarCtx, {
+                type: 'radar',
+                data: controlCoverageData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: true,
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 100,
+                            ticks: {
+                                stepSize: 20,
+                                backdropColor: 'transparent'
+                            },
+                            pointLabels: {
+                                font: {
+                                    size: 10
+                                },
+                                color: function(context) {
+                                    return getComputedStyle(document.documentElement).getPropertyValue('--text');
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.raw + '%';
+                                }
+                            }
+                        }
+                    },
+                    elements: {
+                        line: {
+                            tension: 0.1
+                        }
+                    },
+                    animation: {
+                        duration: 1000
+                    }
+                }
+            });
+
+            // Doughnut Chart - Risk Distribution
+            const doughnutCtx = document.getElementById('doughnutChart').getContext('2d');
+            doughnutChart = new Chart(doughnutCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: riskData.labels,
+                    datasets: [{
+                        data: riskData.weights,
+                        backgroundColor: riskData.bgColors,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                font: {
+                                    size: 11
+                                },
+                                color: function(context) {
+                                    return getComputedStyle(document.documentElement).getPropertyValue('--text');
+                                },
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        animateRotate: true,
+                        animateScale: true,
+                        duration: 1500
+                    },
+                    cutout: '60%'
+                }
+            });
+        }
+
+        // Initialize the application
+        function initApp() {
+            loadControls();
+            loadRiskFactors();
+            loadTopRisks();
+            loadRecommendedActions();
+            initNumberInputs();
+            updateControlCoverage();
+
+            // Initialize charts when page 3 is loaded
+            document.getElementById('nextToPage3').addEventListener('click', function() {
+                if (!gaugeChart) {
+                    initCharts();
+                }
+            });
+
+            // Auto-refresh data every 30 seconds
+            let autoRefreshInterval = setInterval(function() {
+                refreshData();
+            }, 30000);
+
+            // Function to refresh data
+            function refreshData() {
+                const refreshBtn = document.getElementById('refresh-btn');
+                if (refreshBtn) {
+                    refreshBtn.click();
+                }
+            }
+
+            // Refresh button
+            document.getElementById('refresh-btn').addEventListener('click', function() {
+                const btn = this;
+                const icon = btn.querySelector('i');
+
+                // Add loading animation
+                btn.disabled = true;
+                icon.className = 'fas fa-spinner fa-spin me-2';
+
+                // Simulate data refresh from database
+                setTimeout(function() {
+                    // Update last updated time
+                    document.getElementById('update-time').textContent = DatabaseManager.getLastUpdated().toLocaleString();
+
+                    // Simulate potential changes in the database
+                    if (Math.random() > 0.7) {
+                        // Randomly toggle some controls to simulate changes
+                        const checkboxes = document.querySelectorAll('.control-checkbox');
+                        checkboxes.forEach(checkbox => {
+                            if (Math.random() > 0.8) {
+                                checkbox.checked = !checkbox.checked;
+                                DatabaseManager.updateControl(checkbox.id, checkbox.checked);
+                                checkbox.dispatchEvent(new Event('change'));
+                            }
+                        });
+
+                        // Randomly adjust some risk factors
+                        const riskInputs = document.querySelectorAll('.risk-number-group input');
+                        riskInputs.forEach(input => {
+                            if (Math.random() > 0.8) {
+                                const currentValue = parseInt(input.value) || 0;
+                                const newValue = Math.min(40, Math.max(0, currentValue + (Math.random() > 0.5 ? 5 : -5)));
+                                input.value = newValue;
+                                const factorId = input.id.replace('-input', '');
+                                DatabaseManager.updateRiskFactor(factorId, newValue);
+                                input.dispatchEvent(new Event('input'));
+                            }
+                        });
+                    }
+
+                    // Update all charts with current data
+                    updateDashboard();
+
+                    // Reset button
+                    icon.className = 'fas fa-sync-alt me-2';
+                    btn.disabled = false;
+
+                    // Add animation to the dashboard header
+                    const header = document.querySelector('.dashboard-header');
+                    header.style.animation = 'float 1s ease';
+                    setTimeout(() => {
+                        header.style.animation = '';
+                    }, 1000);
+                }, 1500);
+            });
+
+            // Clear interval when leaving page
+            window.addEventListener('beforeunload', function() {
+                clearInterval(autoRefreshInterval);
+            });
+        }
+
+        // Start the application
+        initApp();
+    </script>
+</body>
+</html>
