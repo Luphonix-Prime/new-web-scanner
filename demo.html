@@ -1663,149 +1663,159 @@
 
         // Update the dashboard with current data
         function updateDashboard() {
-            // Update control coverage data
-            updateControlCoverageData();
+            // Update risk score
+            const riskScore = calculateRiskScore();
+            document.getElementById('risk-score').textContent = riskScore;
+            document.getElementById('risk-progress').style.width = `${riskScore}%`;
 
-            // Update all charts
-            updateRiskCharts();
+            // Update risk level text and color
+            const riskLevel = document.getElementById('risk-level');
+            if (riskScore >= 61) {
+                riskLevel.textContent = 'High Risk';
+                riskLevel.className = 'risk-high';
+            } else if (riskScore >= 31) {
+                riskLevel.textContent = 'Medium Risk';
+                riskLevel.className = 'risk-medium';
+            } else {
+                riskLevel.textContent = 'Low Risk';
+                riskLevel.className = 'risk-low';
+            }
 
             // Update gauge chart
             if (gaugeChart) {
-                gaugeChart.data.datasets[0].data = [calculateRiskScore(), 100 - calculateRiskScore()];
+                gaugeChart.data.datasets[0].data = [riskScore, 100 - riskScore];
                 gaugeChart.update();
+            }
+
+            // Update radar chart data
+            if (radarChart) {
+                const controls = DatabaseManager.getControls();
+                controlCoverageData.labels = controls.map(c => c.name);
+                controlCoverageData.datasets[0].data = controls.map(c => c.checked ? 100 : 0);
+                radarChart.data.labels = controlCoverageData.labels;
+                radarChart.data.datasets[0].data = controlCoverageData.datasets[0].data;
+                radarChart.update();
+            }
+
+            // Update doughnut chart
+            if (doughnutChart) {
+                const riskFactors = DatabaseManager.getRiskFactors();
+                const categories = ['External', 'Technical', 'Operational', 'Governance', 'Human'];
+                
+                riskData.labels = categories;
+                riskData.weights = categories.map(category => {
+                    const factorsInCategory = riskFactors.filter(f => f.category === category);
+                    return factorsInCategory.reduce((sum, f) => sum + f.value, 0);
+                });
+                riskData.bgColors = [
+                    [244, 67, 54],   // External - Red
+                    [255, 152, 0],   // Technical - Orange
+                    [33, 150, 243],  // Operational - Blue
+                    [76, 175, 80],   // Governance - Green
+                    [156, 39, 176]   // Human - Purple
+                ];
+
+                doughnutChart.data.labels = riskData.labels;
+                doughnutChart.data.datasets[0].data = riskData.weights;
+                doughnutChart.data.datasets[0].backgroundColor = riskData.bgColors.map(color => `rgb(${color.join(',')})`); 
+                doughnutChart.update();
             }
         }
 
         // Initialize charts when page 3 is loaded
         function initCharts() {
-            // Gauge Chart
-            const gaugeCtx = document.getElementById('scoreGauge').getContext('2d');
-            gaugeChart = new Chart(gaugeCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Risk', 'Remaining'],
-                    datasets: [{
-                        data: [calculateRiskScore(), 100 - calculateRiskScore()],
-                        backgroundColor: ['#6a0dad', 'rgba(106, 13, 173, 0.1)'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    circumference: 270,
-                    rotation: 225,
-                    cutout: '80%',
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { enabled: false }
-                    },
-                    animation: {
-                        animateRotate: true,
-                        animateScale: true,
-                        duration: 1500
-                    }
-                }
-            });
-
-            // Radar Chart - Control Coverage
-            const radarCtx = document.getElementById('radarChart').getContext('2d');
-            radarChart = new Chart(radarCtx, {
-                type: 'radar',
-                data: controlCoverageData,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        r: {
-                            angleLines: {
-                                display: true,
-                                color: 'rgba(0, 0, 0, 0.1)'
-                            },
-                            suggestedMin: 0,
-                            suggestedMax: 100,
-                            ticks: {
-                                stepSize: 20,
-                                backdropColor: 'transparent'
-                            },
-                            pointLabels: {
-                                font: {
-                                    size: 10
-                                },
-                                color: function(context) {
-                                    return getComputedStyle(document.documentElement).getPropertyValue('--text');
-                                }
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return context.dataset.label + ': ' + context.raw + '%';
-                                }
-                            }
-                        }
-                    },
-                    elements: {
-                        line: {
-                            tension: 0.1
-                        }
-                    },
-                    animation: {
-                        duration: 1000
-                    }
-                }
-            });
-
-            // Doughnut Chart - Risk Distribution
-            const doughnutCtx = document.getElementById('doughnutChart').getContext('2d');
-            doughnutChart = new Chart(doughnutCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: riskData.labels,
-                    datasets: [{
-                        data: riskData.weights,
-                        backgroundColor: riskData.bgColors,
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                padding: 20,
-                                font: {
-                                    size: 11
-                                },
-                                color: function(context) {
-                                    return getComputedStyle(document.documentElement).getPropertyValue('--text');
-                                },
-                                usePointStyle: true,
-                                pointStyle: 'circle'
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `${context.label}: ${context.raw}%`;
-                                }
-                            }
-                        }
-                    },
-                    animation: {
-                        animateRotate: true,
-                        animateScale: true,
-                        duration: 1500
-                    },
-                    cutout: '60%'
-                }
-            });
+    // Gauge Chart
+    const gaugeCtx = document.getElementById('scoreGauge').getContext('2d');
+    gaugeChart = new Chart(gaugeCtx, {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [77, 23],
+                backgroundColor: ['#6a0dad', '#e0e0e0'],
+                borderWidth: 0,
+                circumference: 180,
+                rotation: 270,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '80%',
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: false }
+            }
         }
+    });
+
+    // Radar Chart
+    const radarCtx = document.getElementById('radarChart').getContext('2d');
+    radarChart = new Chart(radarCtx, {
+        type: 'radar',
+        data: {
+            labels: controlCoverageData.labels,
+            datasets: [{
+                label: 'Implementation Status',
+                data: controlCoverageData.datasets[0].data,
+                backgroundColor: 'rgba(106, 13, 173, 0.2)',
+                borderColor: '#6a0dad',
+                borderWidth: 2,
+                pointBackgroundColor: '#6a0dad',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: '#6a0dad'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    angleLines: { color: 'rgba(106, 13, 173, 0.1)' },
+                    grid: { color: 'rgba(106, 13, 173, 0.1)' },
+                    pointLabels: { color: 'var(--text)' },
+                    ticks: { 
+                        beginAtZero: true,
+                        max: 100,
+                        color: 'var(--text-light)'
+                    }
+                }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+
+    // Doughnut Chart
+    const doughnutCtx = document.getElementById('doughnutChart').getContext('2d');
+    doughnutChart = new Chart(doughnutCtx, {
+        type: 'doughnut',
+        data: {
+            labels: riskData.labels,
+            datasets: [{
+                data: riskData.weights,
+                backgroundColor: riskData.bgColors.map(color => `rgb(${color.join(',')})`),
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        color: 'var(--text)',
+                        padding: 20,
+                        font: { size: 12 }
+                    }
+                }
+            }
+        }
+    });
+}
+        
 
         // Generate PDF report with all user inputs
         function generatePDFReport() {
