@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AphelionCyber Risk Dashboard</title>
+    <title>Enterprise Cyber Risk Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -703,6 +705,35 @@
             background-color: var(--danger);
         }
 
+        /* Download Report Button */
+        .download-report-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 80px;
+            z-index: 1000;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 500;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .download-report-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .download-report-btn i {
+            margin-right: 8px;
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -754,15 +785,14 @@
             .critical-warning {
                 padding: 20px;
             }
+            .download-report-btn {
+                right: 20px;
+                bottom: 80px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="db-status" id="dbStatus">
-        <i class="fas fa-database"></i>
-        <span>Connected to Database</span>
-    </div>
-
     <button class="theme-toggle" id="themeToggle">
         <i class="fas fa-moon"></i>
     </button>
@@ -847,11 +877,6 @@
                         <h1><i class="fas fa-shield-alt me-3"></i> Enterprise Cyber Risk Dashboard</h1>
                         <p class="text-white-50 mb-0"><i class="far fa-clock me-2"></i> Last updated: <span id="update-time"></span></p>
                     </div>
-                    <div class="col-md-4 text-end">
-                        <button class="btn nav-btn" id="refresh-btn">
-                            <i class="fas fa-sync-alt me-2"></i> Refresh Data
-                        </button>
-                    </div>
                 </div>
             </div>
 
@@ -935,11 +960,19 @@
                 <button id="backToPage2" class="nav-btn">
                     <i class="fas fa-arrow-left me-2"></i> Back to Configuration
                 </button>
-            </div>
+<!--            </div>-->
+<!--             <div class="db-status" id="dbStatus">-->
+<!--                 <i class="fas fa-database"></i> Database Connected-->
+<!--             </div>-->
+              <button class="download-report-btn" id="downloadReportBtn">
+                  <i class="fas fa-file-pdf"></i> Download Report
+              </button>
+
+
         </div>
     </div>
 
-     <script>
+    <script>
         // Database factory function
         function createDatabase() {
             return {
@@ -1761,6 +1794,205 @@
             });
         }
 
+        // Generate PDF report with all user inputs
+        function generatePDFReport() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Add AphelionCyber header
+            doc.setFontSize(22);
+            doc.setTextColor(106, 13, 173);
+            doc.text('AphelionCyber Risk Assessment Report', 105, 20, { align: 'center' });
+
+            doc.setFontSize(12);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Generated on: ${new Date().toLocaleString()}`, 105, 30, { align: 'center' });
+
+            // Add a decorative line
+            doc.setDrawColor(106, 13, 173);
+            doc.setLineWidth(0.5);
+            doc.line(20, 35, 190, 35);
+
+            // 1. Risk Score Summary
+            doc.setFontSize(16);
+            doc.setTextColor(0, 0, 0);
+            doc.text('1. Risk Score Summary', 20, 45);
+
+            const riskScore = calculateRiskScore();
+            let riskColor, riskLevel;
+
+            if (riskScore >= 61) {
+                riskColor = [244, 67, 54];
+                riskLevel = 'High Risk';
+            } else if (riskScore >= 31) {
+                riskColor = [255, 152, 0];
+                riskLevel = 'Medium Risk';
+            } else {
+                riskColor = [76, 175, 80];
+                riskLevel = 'Low Risk';
+            }
+
+            doc.setFontSize(14);
+            doc.setTextColor(riskColor[0], riskColor[1], riskColor[2]);
+            doc.text(`Overall Risk Score: ${riskScore}/100 (${riskLevel})`, 20, 55);
+
+            // Add gauge visualization
+            doc.setFillColor(106, 13, 173);
+            doc.rect(20, 60, (riskScore/100)*170, 5, 'F');
+            doc.setDrawColor(200, 200, 200);
+            doc.rect(20, 60, 170, 5);
+
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            doc.text('0', 20, 70);
+            doc.text('100', 180, 70);
+
+            // 2. Control Coverage Details (User Inputs from Page 1)
+            doc.setFontSize(16);
+            doc.setTextColor(0, 0, 0);
+            doc.text('2. Security Control Configuration', 20, 85);
+
+            const coverage = calculateControlCoverage();
+            doc.setFontSize(14);
+            doc.setTextColor(106, 13, 173);
+            doc.text(`Control Coverage: ${coverage}%`, 20, 95);
+
+            // Create table for controls
+            const controlsData = DatabaseManager.getControls().map(control => {
+                return [
+                    control.name,
+                    control.checked ? 'Enabled' : 'Disabled',
+                    control.impact,
+                    control.category,
+                    `${control.weight}%`
+                ];
+            });
+
+            doc.autoTable({
+                startY: 100,
+                head: [['Control Name', 'Status', 'Impact', 'Category', 'Weight']],
+                body: controlsData,
+                headStyles: {
+                    fillColor: [106, 13, 173],
+                    textColor: [255, 255, 255]
+                },
+                alternateRowStyles: {
+                    fillColor: [240, 240, 240]
+                },
+                margin: { left: 20 },
+                styles: { fontSize: 9 }
+            });
+
+            // 3. Risk Distribution Details (User Inputs from Page 2)
+            doc.setFontSize(16);
+            doc.setTextColor(0, 0, 0);
+            doc.text('3. Risk Factor Configuration', 20, doc.autoTable.previous.finalY + 15);
+
+            // Create table for risk factors
+            const riskFactorsData = DatabaseManager.getRiskFactors().map(factor => {
+                return [
+                    factor.name,
+                    factor.category,
+                    factor.description,
+                    `${factor.value}/40`
+                ];
+            });
+
+            doc.autoTable({
+                startY: doc.autoTable.previous.finalY + 20,
+                head: [['Risk Factor', 'Category', 'Description', 'Value']],
+                body: riskFactorsData,
+                headStyles: {
+                    fillColor: [106, 13, 173],
+                    textColor: [255, 255, 255]
+                },
+                alternateRowStyles: {
+                    fillColor: [240, 240, 240]
+                },
+                margin: { left: 20 },
+                styles: { fontSize: 8 },
+                columnStyles: {
+                    2: { cellWidth: 80 }, // Description column wider
+                    3: { cellWidth: 20 }  // Value column narrower
+                }
+            });
+
+            // 4. Risk Distribution Visualization
+            doc.setFontSize(16);
+            doc.setTextColor(0, 0, 0);
+            doc.text('4. Risk Distribution Analysis', 20, doc.autoTable.previous.finalY + 15);
+
+            // Create doughnut chart data
+            const chartData = {
+                labels: riskData.labels,
+                data: riskData.weights,
+                colors: riskData.bgColors
+            };
+
+            // Simple visualization of risk distribution
+            let chartY = doc.autoTable.previous.finalY + 25;
+            chartData.labels.forEach((label, index) => {
+                doc.setFillColor(chartData.colors[index][0], chartData.colors[index][1], chartData.colors[index][2]);
+                doc.rect(20, chartY, 5, 5, 'F');
+                doc.setFontSize(10);
+                doc.setTextColor(0, 0, 0);
+                doc.text(`${label}: ${chartData.data[index]}%`, 30, chartY + 4);
+                chartY += 7;
+            });
+
+            // // 5. Top Risks
+            // doc.setFontSize(16);
+            // doc.setTextColor(0, 0, 0);
+            // doc.text('5. Identified Top Risks', 20, chartY + 10);
+            //
+            // DatabaseManager.getTopRisks().forEach((risk, i) => {
+            //     doc.setFontSize(12);
+            //     doc.setTextColor(0, 0, 0);
+            //     doc.text(`${i+1}. ${risk.title}`, 25, chartY + 20 + (i * 15));
+            //
+            //     // Severity indicator
+            //     if (risk.severity === 'Critical') {
+            //         doc.setFillColor(244, 67, 54);
+            //     } else {
+            //         doc.setFillColor(255, 152, 0);
+            //     }
+            //     doc.rect(180, chartY + 15 + (i * 15), 10, 10, 'F');
+            //     doc.setFontSize(10);
+            //     doc.text(risk.severity, 192, chartY + 22 + (i * 15));
+            //
+            //     doc.setFontSize(10);
+            //     doc.setTextColor(100, 100, 100);
+            //     doc.text(risk.description, 30, chartY + 25 + (i * 15), { maxWidth: 150 });
+            // });
+
+            // // 6. Recommended Actions
+            // let actionsY = chartY + 20 + (DatabaseManager.getTopRisks().length * 15);
+            // doc.setFontSize(16);
+            // doc.setTextColor(0, 0, 0);
+            // doc.text('6. Recommended Security Actions', 20, actionsY + 10);
+            //
+            // DatabaseManager.getRecommendedActions().forEach((action, i) => {
+            //     doc.setFontSize(10);
+            //     doc.setTextColor(0, 0, 0);
+            //     doc.text(`• ${action}`, 25, actionsY + 20 + (i * 7), { maxWidth: 160 });
+            // });
+
+            // Footer
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            doc.text('Confidential - AphelionCyber Risk Assessment Report', 105, 285, { align: 'center' });
+
+            // Page numbers
+            const pageCount = doc.internal.getNumberOfPages();
+            for(let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.text(`Page ${i} of ${pageCount}`, 190, 285, { align: 'right' });
+            }
+
+            // Save the PDF
+            doc.save(`AphelionCyber_Risk_Assessment_${new Date().toISOString().slice(0,10)}.pdf`);
+        }
+
         // Initialize the application
         function initApp() {
             loadControls();
@@ -1777,78 +2009,22 @@
                 }
             });
 
-            // Auto-refresh data every 30 seconds
-            let autoRefreshInterval = setInterval(function() {
-                refreshData();
-            }, 30000);
-
-            // Function to refresh data
-            function refreshData() {
-                const refreshBtn = document.getElementById('refresh-btn');
-                if (refreshBtn) {
-                    refreshBtn.click();
-                }
-            }
-
-            // Refresh button
-            document.getElementById('refresh-btn').addEventListener('click', function() {
+            // Download report button
+            document.getElementById('downloadReportBtn').addEventListener('click', function() {
                 const btn = this;
                 const icon = btn.querySelector('i');
 
                 // Add loading animation
                 btn.disabled = true;
-                icon.className = 'fas fa-spinner fa-spin me-2';
+                icon.className = 'fas fa-spinner fa-spin';
 
-                // Simulate data refresh from database
                 setTimeout(function() {
-                    // Update last updated time
-                    document.getElementById('update-time').textContent = DatabaseManager.getLastUpdated().toLocaleString();
-
-                    // Simulate potential changes in the database
-                    if (Math.random() > 0.7) {
-                        // Randomly toggle some controls to simulate changes
-                        const checkboxes = document.querySelectorAll('.control-checkbox');
-                        checkboxes.forEach(checkbox => {
-                            if (Math.random() > 0.8) {
-                                checkbox.checked = !checkbox.checked;
-                                DatabaseManager.updateControl(checkbox.id, checkbox.checked);
-                                checkbox.dispatchEvent(new Event('change'));
-                            }
-                        });
-
-                        // Randomly adjust some risk factors
-                        const riskInputs = document.querySelectorAll('.risk-number-group input');
-                        riskInputs.forEach(input => {
-                            if (Math.random() > 0.8) {
-                                const currentValue = parseInt(input.value) || 0;
-                                const newValue = Math.min(40, Math.max(0, currentValue + (Math.random() > 0.5 ? 5 : -5)));
-                                input.value = newValue;
-                                const factorId = input.id.replace('-input', '');
-                                DatabaseManager.updateRiskFactor(factorId, newValue);
-                                input.dispatchEvent(new Event('input'));
-                            }
-                        });
-                    }
-
-                    // Update all charts with current data
-                    updateDashboard();
+                    generatePDFReport();
 
                     // Reset button
-                    icon.className = 'fas fa-sync-alt me-2';
+                    icon.className = 'fas fa-file-pdf';
                     btn.disabled = false;
-
-                    // Add animation to the dashboard header
-                    const header = document.querySelector('.dashboard-header');
-                    header.style.animation = 'float 1s ease';
-                    setTimeout(() => {
-                        header.style.animation = '';
-                    }, 1000);
-                }, 1500);
-            });
-
-            // Clear interval when leaving page
-            window.addEventListener('beforeunload', function() {
-                clearInterval(autoRefreshInterval);
+                }, 500);
             });
         }
 
