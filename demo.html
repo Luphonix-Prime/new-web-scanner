@@ -877,6 +877,12 @@
                         <h1><i class="fas fa-shield-alt me-3"></i> Enterprise Cyber Risk Dashboard</h1>
                         <p class="text-white-50 mb-0"><i class="far fa-clock me-2"></i> Last updated: <span id="update-time"></span></p>
                     </div>
+                    <div class="col-md-4 text-end">
+                        <button id="refresh-btn" class="btn btn-light ms-auto">
+                            <i class="fas fa-sync-alt me-2"></i>Refresh Data
+                        </button>
+                        <span id="update-time" class="ms-3 text-light"></span>
+                    </div>
                 </div>
             </div>
 
@@ -2010,40 +2016,37 @@ document.getElementById('refresh-btn').addEventListener('click', function() {
         btn.disabled = true;
         icon.className = 'fas fa-spinner fa-spin me-2';
 
-        // Simulate data refresh (just reload from DB, do not reset)
-        setTimeout(function() {
-            try {
-                // Reload data from localStorage
-                DatabaseManager.init();
+        // Clear all previous data
+        localStorage.clear(); // This will clear all stored data
+        DatabaseManager.init(); // Reinitialize with fresh data
 
-                // Update last updated time
-                document.getElementById('update-time').textContent = DatabaseManager.getLastUpdated().toLocaleString();
+        // Update last updated time
+        document.getElementById('update-time').textContent = new Date().toLocaleString();
 
-                // Reset to first page
-                document.getElementById('page3').classList.remove('active');
-                document.getElementById('page2').classList.remove('active');
-                document.getElementById('page1').classList.add('active');
+        // Reset to first page
+        document.getElementById('page3').classList.remove('active');
+        document.getElementById('page2').classList.remove('active');
+        document.getElementById('page1').classList.add('active');
 
-                // Reload all controls and dashboard data
-                loadControls();
-                loadRiskFactors();
-                loadTopRisks();
-                loadRecommendedActions();
-                updateDashboard();
+        // Reload all controls and dashboard data
+        loadControls();
+        loadRiskFactors();
+        loadTopRisks();
+        loadRecommendedActions();
+        updateDashboard();
 
-            } catch (error) {
-                console.error('Error updating dashboard:', error);
-            } finally {
-                // Reset button
-                icon.className = 'fas fa-sync-alt me-2';
-                btn.disabled = false;
-            }
-        }, 1500);
+        // Reset all form inputs
+        document.querySelectorAll('input[type="number"]').forEach(input => input.value = '');
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => checkbox.checked = false);
+
     } catch (error) {
-        console.error('Error in refresh button click handler:', error);
-        // Reset button state
-        icon.className = 'fas fa-sync-alt me-2';
-        btn.disabled = false;
+        console.error('Error updating dashboard:', error);
+    } finally {
+        // Reset button after 1.5 seconds
+        setTimeout(() => {
+            icon.className = 'fas fa-sync-alt me-2';
+            btn.disabled = false;
+        }, 1500);
     }
 });
         // Initialize the application
@@ -2084,5 +2087,28 @@ document.getElementById('refresh-btn').addEventListener('click', function() {
         // Start the application
         initApp();
     </script>
+    <style>
+        #refresh-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+#refresh-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+}
+
+#refresh-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+#update-time {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+    </style>
 </body>
 </html>
