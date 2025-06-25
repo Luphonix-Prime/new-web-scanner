@@ -2019,6 +2019,11 @@ document.getElementById('refresh-btn').addEventListener('click', function() {
                 // Update last updated time
                 document.getElementById('update-time').textContent = DatabaseManager.getLastUpdated().toLocaleString();
 
+                // Reset to first page
+                document.getElementById('page3').classList.remove('active');
+                document.getElementById('page2').classList.remove('active');
+                document.getElementById('page1').classList.add('active');
+
                 // Reload all controls and dashboard data
                 loadControls();
                 loadRiskFactors();
