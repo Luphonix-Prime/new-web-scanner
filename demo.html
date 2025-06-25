@@ -1178,7 +1178,13 @@
             document.documentElement.removeAttribute('data-theme');
             themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
         }
-
+        window.addEventListener('load', () => {
+            // Uncheck all checkboxes manually
+            const controls = DatabaseManager.getControls();
+            controls.forEach(c => c.checked = false);
+            DatabaseManager.saveToLocalStorage();
+            loadControls();
+        });
         // Toggle theme on button click
         themeToggle.addEventListener('click', function() {
             let theme;
