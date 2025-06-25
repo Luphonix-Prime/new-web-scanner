@@ -453,6 +453,14 @@
             color: var(--text-light);
         }
 
+        .dashboard-logo {
+            width: 150px;
+            height: auto;
+            margin-right: 15px;
+            filter: brightness(0) invert(1);
+            transition: var(--transition);
+        }
+
         .theme-toggle {
             position: fixed;
             bottom: 20px;
@@ -789,6 +797,10 @@
                 right: 20px;
                 bottom: 80px;
             }
+            .dashboard-logo {
+                width: 40px;
+                margin-right: 12px;
+            }
         }
     </style>
 </head>
@@ -801,8 +813,13 @@
         <!-- Page 1: Control Coverage Input -->
         <div id="page1" class="page active">
             <div class="dashboard-header">
-                <h1><i class="fas fa-sliders-h me-3"></i> Control Coverage Assessment</h1>
-                <p class="text-white-50 mb-0">Step 1 of 3: Configure your security controls</p>
+                <div class="d-flex align-items-center mb-3">
+                    <img src="white_logo-removebg-preview.png" alt="AphelionCyber Logo" class="dashboard-logo">
+                    <div>
+                        <h1>Control Coverage Assessment</h1>
+                        <p class="text-white-50 mb-0">Step 1 of 3: Configure your security controls</p>
+                    </div>
+                </div>
             </div>
 
             <!-- Critical Warning Message -->
