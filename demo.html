@@ -967,8 +967,9 @@
               <button class="download-report-btn" id="downloadReportBtn">
                   <i class="fas fa-file-pdf"></i> Download Report
               </button>
-
-
+              <button class="nav-btn" id="refresh-btn">
+                  <i class="fas fa-sync-alt me-2"></i> Refresh Data
+              </button>
         </div>
     </div>
 
@@ -1999,6 +2000,47 @@
             doc.save(`AphelionCyber_Risk_Assessment_${new Date().toISOString().slice(0,10)}.pdf`);
         }
 
+        // Refresh button
+document.getElementById('refresh-btn').addEventListener('click', function() {
+    const btn = this;
+    const icon = btn.querySelector('i');
+
+    try {
+        // Add loading animation
+        btn.disabled = true;
+        icon.className = 'fas fa-spinner fa-spin me-2';
+
+        // Simulate data refresh (just reload from DB, do not reset)
+        setTimeout(function() {
+            try {
+                // Reload data from localStorage
+                DatabaseManager.init();
+
+                // Update last updated time
+                document.getElementById('update-time').textContent = DatabaseManager.getLastUpdated().toLocaleString();
+
+                // Reload all controls and dashboard data
+                loadControls();
+                loadRiskFactors();
+                loadTopRisks();
+                loadRecommendedActions();
+                updateDashboard();
+
+            } catch (error) {
+                console.error('Error updating dashboard:', error);
+            } finally {
+                // Reset button
+                icon.className = 'fas fa-sync-alt me-2';
+                btn.disabled = false;
+            }
+        }, 1500);
+    } catch (error) {
+        console.error('Error in refresh button click handler:', error);
+        // Reset button state
+        icon.className = 'fas fa-sync-alt me-2';
+        btn.disabled = false;
+    }
+});
         // Initialize the application
         function initApp() {
             loadControls();
