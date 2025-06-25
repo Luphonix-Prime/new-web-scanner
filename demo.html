@@ -848,6 +848,8 @@
                     <div class="controls-grid" id="controlsGrid">
                         <!-- Controls will be loaded from database -->
                     </div>
+                    <hr class="my-4">
+                    
                 </div>
             </div>
 
@@ -1332,29 +1334,39 @@
             updateControlCoverage();
         }
 
-        // Load risk factors from database
-        function loadRiskFactors() {
-            const container = document.getElementById('riskFactorsContainer');
+        // Load risk factors from database (for input on page 2 and summary on page 1)
+        function loadRiskFactors(containerId = 'riskFactorsContainer') {
+            const container = document.getElementById(containerId);
             container.innerHTML = '';
-
-            DatabaseManager.getRiskFactors().forEach(factor => {
-                const factorGroup = document.createElement('div');
-                factorGroup.className = 'risk-input-group';
-                factorGroup.innerHTML = `
-                    <div class="risk-input-label">
-                        <span>${factor.name} <span class="risk-factor-tag">${factor.category}</span></span>
-                        <small class="d-block text-muted">${factor.description}</small>
-                    </div>
-                    <div class="risk-number-group">
-                        <input type="number" min="0" max="40" value="${factor.value}"
-                               id="${factor.id}-input" required>
-                    </div>
-                    <div class="error-message" id="${factor.id}-error">Value must be between 0 and 40</div>
-                `;
-                container.appendChild(factorGroup);
+            const riskFactors = DatabaseManager.getRiskFactors();
+            riskFactors.forEach(factor => {
+                if (containerId === 'riskFactorsContainer') {
+                    // Full input for page 2
+                    const factorGroup = document.createElement('div');
+                    factorGroup.className = 'risk-input-group';
+                    factorGroup.innerHTML = `
+                        <div class="risk-input-label">
+                            <span>${factor.name} <span class="risk-factor-tag">${factor.category}</span></span>
+                            <small class="d-block text-muted">${factor.description}</small>
+                        </div>
+                        <div class="risk-number-group">
+                            <input type="number" min="0" max="40" value="${factor.value}"
+                                   id="${factor.id}-input" required>
+                        </div>
+                        <div class="error-message" id="${factor.id}-error">Value must be between 0 and 40</div>
+                    `;
+                    container.appendChild(factorGroup);
+                } else if (containerId === 'riskFactorsContainerPage1') {
+                    // Summary for page 1
+                    const div = document.createElement('div');
+                    div.className = 'risk-input-group';
+                    div.innerHTML = `<div class='risk-input-label'>${factor.name}</div><div>${factor.value}/40</div>`;
+                    container.appendChild(div);
+                }
             });
-
-            initNumberInputs();
+            if (containerId === 'riskFactorsContainer') {
+                initNumberInputs();
+            }
         }
 
         // Load top risks from database
@@ -2069,7 +2081,8 @@ document.getElementById('refresh-btn').addEventListener('click', function() {
         // Initialize the application
         function initApp() {
             loadControls();
-            loadRiskFactors();
+            loadRiskFactors('riskFactorsContainer'); // For page 2
+            loadRiskFactors('riskFactorsContainerPage2'); // For page 1 summary
             loadTopRisks();
             loadRecommendedActions();
             initNumberInputs();
